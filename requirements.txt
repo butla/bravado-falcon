@@ -1,0 +1,3 @@
+bravado==8.1.2
+pytest-falcon==0.3.3
+

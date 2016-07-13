@@ -1,0 +1,6 @@
+[run]
+source = bravado_falcon 
+
+[report]
+fail_under = 100
+
