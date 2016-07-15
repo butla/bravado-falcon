@@ -15,9 +15,8 @@ import tests.service
 
 @pytest.fixture
 def client(swagger_spec):
-    api = tests.service.get_app()
     return SwaggerClient.from_spec(swagger_spec,
-                                   http_client=FalconHttpClient(api),
+                                   http_client=FalconHttpClient(tests.service.api),
                                    config={'also_return_response': True})
 
 @pytest.fixture(scope='session')

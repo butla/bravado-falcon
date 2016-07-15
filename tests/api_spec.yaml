@@ -9,7 +9,7 @@ produces:
   - application/json
 
 paths:
-  /v1/do/{id}:
+  /v1/operation/{id}:
     put:
       operationId: submitOperation
       description: |

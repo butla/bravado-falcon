@@ -1,6 +1,4 @@
 import json
-import uuid
-
 import falcon
 
 
@@ -15,7 +13,5 @@ class ServiceResource(object):
         resp.status = falcon.HTTP_ACCEPTED
 
 
-def get_app():
-    api = falcon.API()
-    api.add_route('/v1/do/{id}', ServiceResource())
-    return api
+api = falcon.API()
+api.add_route('/v1/operation/{id}', ServiceResource())
