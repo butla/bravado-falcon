@@ -1,23 +1,21 @@
 """
 Classes necessary for doing Falcon unit tests through Bravado.
 """
-import json
+
 try:
     from urllib.parse import urlencode
 except ImportError:
     from urllib import urlencode
 
+import bravado.http_client
 import bravado.http_future
 import bravado_core.response
 from pytest_falcon.plugin import Client
 
-# from .falcon_testing import simulate_falcon_request
 
-
-# TODO redo the description and maybe inherit the original client
-class FalconTestHttpClient(object):
-    """Interface for a minimal HTTP client that can retrieve Swagger specs
-    and perform HTTP calls to fulfill a Swagger operation.
+class FalconHttpClient(bravado.http_client.HttpClient):
+    """Bravado HTTP client implementation that can be used in Falcon unit tests.
+    It doesn't actually call anything through HTTP, it just simulates those calls.
 
     Args:
         api (`falcon.API`): API object to send the requests to.
@@ -28,21 +26,21 @@ class FalconTestHttpClient(object):
 
     def request(self, request_params, operation=None, response_callbacks=None,
                 also_return_response=False):
-        """
-        :param request_params: complete request data. e.g. url, method,
-            headers, body, params, connect_timeout, timeout, etc.
-        :type request_params: dict
-        :param operation: operation that this http request is for. Defaults
-            to None - in which case, we're obviously just retrieving a Swagger
-            Spec.
-        :type operation: :class:`bravado_core.operation.Operation`
-        :param response_callbacks: List of callables to post-process the
-            incoming response. Expects args incoming_response and operation.
-        :param also_return_response: Consult the constructor documentation for
-            :class:`bravado.http_future.HttpFuture`.
+        """Taken from `bravado.http_client.HttpClient`.
 
-        :returns: HTTP Future object
-        :rtype: :class: `bravado_core.http_future.HttpFuture`
+        Args:
+            request_params (dict): complete request data. e.g. url, method, headers, body, params,
+                connect_timeout, timeout, etc.
+            operation (`bravado_core.operation.Operation`): operation that this http request
+                is for. Defaults to None - in which case, we're obviously just retrieving a Swagger
+                Spec.
+            response_callbacks: List of callables to post-process the incoming response.
+                Expects args incoming_response and operation.
+            also_return_response: Consult the constructor documentation for
+                `bravado.http_future.HttpFuture`.
+
+        Returns:
+            `bravado_core.http_future.HttpFuture`: HTTP Future object
         """
         falcon_test_future = FalconTestFutureAdapter(request_params, self._api)
 
@@ -90,41 +88,55 @@ class FalconTestFutureAdapter:
 
 
 class FalconTestResponseAdapter(bravado_core.response.IncomingResponse):
-    """Wraps a response from `simulate_falcon_request` to provide a uniform interface
+    """Wraps a response from Falcon test client to provide a uniform interface
     expected by Bravado's :class:`bravado.http_future.HttpFuture`.
-    It's used when simulating calls to a Falcon API.
-    Those calls will be validated by Bravado.
 
     Args:
-        falcon_test_response: A tuple returned from `simulate_falcon_request`.
+        falcon_test_response: Response to a call simulated with `pytest_falcon`.
     """
 
     def __init__(self, falcon_test_response):
-        # self._response_body = falcon_test_response[0]
-        # self._response_info = falcon_test_response[1]
         self._response = falcon_test_response
 
     @property
     def status_code(self):
-        """TODO"""
+        """
+        Returns:
+            int: HTTP status code
+        """
         return self._response.status_code
 
     @property
     def text(self):
-        """TODO"""
+        """
+        Returns:
+            str: Textual representation of the response's body.
+        """
         return self._response.body
 
     @property
     def reason(self):
-        """TODO"""
+        """
+        Returns:
+            str: Reason-phrase of the HTTP response (e.g. "OK", or "Not Found")
+        """
         # status codes from Falcon look like this: "200 OK"
         return self._response.status[4:]
 
     @property
     def headers(self):
-        """TODO"""
+        """
+        Returns:
+            dict: Headers attached to the response.
+        """
         return self._response.headers
 
     def json(self, **kwargs):
-        """TODO"""
+        """
+        Args:
+            **kwargs: This is a part of the interface, but we don't do anything with it.
+
+        Returns:
+            dict: JSON representation of the response's body.
+        """
         return self._response.json
