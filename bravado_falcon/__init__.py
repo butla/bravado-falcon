@@ -9,8 +9,9 @@ except ImportError:
 
 import bravado.http_future
 import bravado_core.response
+from pytest_falcon.plugin import Client
 
-from .falcon_testing import simulate_falcon_request
+# from .falcon_testing import simulate_falcon_request
 
 
 # TODO redo the description and maybe inherit the original client
@@ -70,6 +71,7 @@ class FalconTestFutureAdapter:
         self._falcon_api = falcon_api
         self._request_params = request_params
         self._response_encoding = response_encoding
+        self._client = Client(falcon_api)
 
 
     def result(self, **_):
@@ -80,13 +82,11 @@ class FalconTestFutureAdapter:
         # Bravado will create the URL by appending request path to 'http://localhost'
         path = self._request_params['url'].replace('http://localhost', '')
         query_string = urlencode(self._request_params.get('params', {}))
-        return simulate_falcon_request(api=self._falcon_api,
-                                       path=path,
-                                       encoding=self._response_encoding,
-                                       query_string=query_string,
-                                       headers=self._request_params.get('headers'),
-                                       body=self._request_params.get('data'),
-                                       method=self._request_params.get('method'))
+        return self._client.fake_request(path=path,
+                                         query_string=query_string,
+                                         headers=self._request_params.get('headers'),
+                                         body=self._request_params.get('data'),
+                                         method=self._request_params.get('method'))
 
 
 class FalconTestResponseAdapter(bravado_core.response.IncomingResponse):
@@ -100,31 +100,31 @@ class FalconTestResponseAdapter(bravado_core.response.IncomingResponse):
     """
 
     def __init__(self, falcon_test_response):
-        self._response_body = falcon_test_response[0]
-        self._response_info = falcon_test_response[1]
+        # self._response_body = falcon_test_response[0]
+        # self._response_info = falcon_test_response[1]
+        self._response = falcon_test_response
 
     @property
     def status_code(self):
         """TODO"""
-        # status codes from Falcon look like this: "200 OK"
-        return int(self._response_info.status[:3])
+        return self._response.status_code
 
     @property
     def text(self):
         """TODO"""
-        return self._response_body
+        return self._response.body
 
     @property
     def reason(self):
         """TODO"""
         # status codes from Falcon look like this: "200 OK"
-        return self._response_info.status[4:]
+        return self._response.status[4:]
 
     @property
     def headers(self):
         """TODO"""
-        return self._response_info.headers
+        return self._response.headers
 
     def json(self, **kwargs):
         """TODO"""
-        return json.loads(self._response_body, **kwargs)
+        return self._response.json
