@@ -2,7 +2,10 @@
 Classes necessary for doing Falcon unit tests through Bravado.
 """
 import json
-from urllib.parse import urlencode
+try:
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlencode
 
 import bravado.http_future
 import bravado_core.response

@@ -5,30 +5,33 @@ except ImportError:
 import os
 
 from bravado.client import SwaggerClient
+import pytest
 import yaml
 
-import tests
-from tests.consts import TEST_DOWNLOAD_REQUEST
-from tests.falcon_bravado import FalconTestHttpClient
+from bravado_falcon import FalconTestHttpClient
+import tests.service
 
 
-# TODO test bravado integration in isolation from PyDAS's resources
-def test_acquisition_request_with_swagger(das_api):
-    # arrange
-    das_api.acquisition_res._org_checker = MagicMock()
+@pytest.fixture
+def api():
+    return tests.service.get_app()
 
-    spec_file_path = os.path.join(tests.__path__[0], '../api_doc.yaml')
+
+@pytest.fixture
+def swagger_spec():
+    spec_file_path = os.path.join(os.path.dirname(__file__), 'api_spec.yaml')
     with open(spec_file_path) as spec_file:
-        swagger_spec = yaml.load(spec_file)
+        return yaml.load(spec_file)
 
+
+def test_request_with_swagger(api, swagger_spec):
+    id = 'some-id'
     client = SwaggerClient.from_spec(swagger_spec,
-                                     http_client=FalconTestHttpClient(das_api.api))
+                                     http_client=FalconTestHttpClient(api))
+    OperationRequest = client.get_model('OperationRequest')
+    request_body = OperationRequest(name='some_name', repeats=3)
 
-    SwaggerAcquisitionRequest = client.get_model('AcquisitionRequest')
-    request_body = SwaggerAcquisitionRequest(**TEST_DOWNLOAD_REQUEST)
+    resp_object = client.v1.submitOperation(body=request_body, id=id).result()
 
-    # act
-    resp_object = client.rest.submitAcquisitionRequest(body=request_body).result()
-
-    # assert
-    assert resp_object
+    assert resp_object.id == id
+    assert resp_object.state == 'submitted'

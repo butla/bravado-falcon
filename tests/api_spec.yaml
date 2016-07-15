@@ -1,0 +1,60 @@
+swagger: '2.0'
+
+info:
+  version: '0.0.1'
+  title: Test Service
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths:
+  /v1/do/{id}:
+    put:
+      operationId: submitOperation
+      description: |
+        Just do stuff for the sake of testing.
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/OperationRequest'
+        - name: id
+          in: path
+          required: true
+          type: string
+      responses:
+        '202':
+          description: Acquisition request submitted
+          schema:
+            $ref: '#/definitions/SubmittedOperationRequest'
+
+definitions:
+  OperationRequest:
+    type: object
+    required:
+    - name
+    - repeats
+    properties:
+      name:
+        type: string
+      repeats:
+        type: integer
+
+  SubmittedOperationRequest:
+    type: object
+    required:
+    - id
+    - name
+    - repeats
+    - state
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      repeats:
+        type: integer
+      state:
+        type: string
