@@ -1,2 +1,2 @@
-bravado==8.1.2
-pytest-falcon==0.3.3
+bravado==8.4.0
+falcon==1.1.0

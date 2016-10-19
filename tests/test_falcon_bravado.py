@@ -4,8 +4,8 @@ except ImportError:
     from mock import MagicMock
 import os
 
+from bravado_core.exception import SwaggerMappingError
 from bravado.client import SwaggerClient
-from jsonschema.exceptions import ValidationError
 import pytest
 import yaml
 
@@ -44,5 +44,5 @@ def test_bravado_validation_works(client):
     OperationRequest = client.get_model('OperationRequest')
     request_body = OperationRequest(name='this will be missing repeats')
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(SwaggerMappingError):
         client.v1.submitOperation(body=request_body, id='some_id').result()
