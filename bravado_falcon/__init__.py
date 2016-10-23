@@ -10,7 +10,7 @@ except ImportError:
 import bravado.http_client
 import bravado.http_future
 import bravado_core.response
-from pytest_falcon.plugin import Client
+from falcon.testing.client import TestClient
 
 
 class FalconHttpClient(bravado.http_client.HttpClient):
@@ -69,7 +69,7 @@ class FalconTestFutureAdapter:
         self._falcon_api = falcon_api
         self._request_params = request_params
         self._response_encoding = response_encoding
-        self._client = Client(falcon_api)
+        self._client = TestClient(falcon_api)
 
 
     def result(self, **_):
@@ -79,12 +79,12 @@ class FalconTestFutureAdapter:
         """
         # Bravado will create the URL by appending request path to 'http://localhost'
         path = self._request_params['url'].replace('http://localhost', '')
-        query_string = urlencode(self._request_params.get('params', {}))
-        return self._client.fake_request(path=path,
-                                         query_string=query_string,
-                                         headers=self._request_params.get('headers'),
-                                         body=self._request_params.get('data'),
-                                         method=self._request_params.get('method'))
+        return self._client.simulate_request(
+            path=path,
+            query_string=self._request_params.get('params', {}),
+            headers=self._request_params.get('headers'),
+            body=self._request_params.get('data'),
+            method=self._request_params.get('method'))
 
 
 class FalconTestResponseAdapter(bravado_core.response.IncomingResponse):
@@ -112,7 +112,7 @@ class FalconTestResponseAdapter(bravado_core.response.IncomingResponse):
         Returns:
             str: Textual representation of the response's body.
         """
-        return self._response.body
+        return self._response.text
 
     @property
     def reason(self):
